@@ -1,0 +1,23 @@
+{
+    "name": "version-toggle",
+    "version": "1.0.0",
+    "description": "Allow users to place annotations in code to include or remove based on version deploying",
+    "main": "index.js",
+    "scripts": {
+        "test": "mocha"
+    },
+    "keywords": [
+        "versioning",
+        "code"
+    ],
+    "author": "Josh Offutt",
+    "license": "MIT",
+    "dependencies": {
+        "fs-extra": "^4.0.0",
+        "path": "^0.12.7",
+        "semver-compare": "^1.0.0"
+    },
+    "devDependencies": {
+        "mocha": "^2.5.3"
+    }
+}
