@@ -2,14 +2,28 @@ const fs = require('fs-extra');
 const path = require('path');
 const cmpSem = require('semver-compare');
 
+/**
+ * vt takes in the users parameters and begins the call to process to get all of the files version toggled.
+ * Will return one single promise that contains all promises from calling process to ensure that when vt finishes, all files that were contained within the input directory have finished being copied and version toggled.
+ * @param {*} options - parameters that users passed to the vt call.
+ */
 exports = module.exports = function vt(options) {
-    var options = options || {};
+    if (options === null || options === undefined) {
+        throw 'Missing options from call. \nUsage: vtvt({conditions:[{featureName:\'sem.ve.r\'}]})';
+    }
     var conditions = (options.conditions ? options.conditions : []);
     if (conditions.length === 0) {
-        return console.error('Missing conditions from vt() call. \nUsage: vt({conditions:[{featureName:\'semver\'}]})');
+        throw 'Missing conditions from vt() call. \nUsage: vt({conditions:[{featureName:\'sem.ve.r\'}]})';
+    }
+    if (matchingFeatures(conditions)) {
+        throw 'You can not pass in the same feature multiple times.';
     }
     var inputDir = (options.inputDir ? options.inputDir : 'src/');
     var outputDir = (options.outputDir ? options.outputDir : 'ver/');
+    //Check to ensure that the inputDir is not the same as outputDir
+    if (inputDir === outputDir) {
+        throw 'Input Directory can not be the same as the Output Directory.\nPlease note that the default inputDir is src/ and the default outputDir is ver/';
+    }
     var exactVer = (options.exact ? options.exact : false);
     var parsedConditions = [];
 
@@ -23,9 +37,7 @@ exports = module.exports = function vt(options) {
     var stat = fs.statSync(inputDir);
     var split = [];
     var path = '';
-    if (stat.isDirectory()) {
-        //Do nothing
-    } else {
+    if (!stat.isDirectory()) {
         //Strip out the path before the file name
         split = inputDir.split('/');
         split.forEach(function(val, indx) {
@@ -35,20 +47,31 @@ exports = module.exports = function vt(options) {
         });
     }
 
+    //Begin going through all of the files to strip out versions
     var promises = [];
-    try {
-        if (split.length === 0) {
-            process(inputDir, outputDir, parsedConditions, inputDir, exactVer, promises);
-        } else {
-            process(inputDir, outputDir, parsedConditions, path, exactVer, promises);
-        }
-    } catch (err) {
-        return console.error(err);
+    //If split is empty, then the inputDir is actually a directory so no need to pass in a modified path
+    if (split.length === 0) {
+        process(inputDir, outputDir, parsedConditions, inputDir, exactVer, promises);
     }
-    // console.log(promises);
+    //If split is not empty, then the inputDir is actually a file so pass in the modified path object
+    else {
+        process(inputDir, outputDir, parsedConditions, path, exactVer, promises);
+    }
+    //Returns a promise that only resolves when all of the files have finished being processed to ensure
+    //that systems can reliably know that the version toggling is finished before doing anything else.
     return Promise.all(promises);
 }
 
+/**
+ * process recursively goes through the input directory for all folders and calls applyReplacements for all files found.
+ * This returns an array of promises of all files being created/copied so that calls to vt can reliably know when all files have been finished.
+ * @param {*} fileToProcess - file or folder to process
+ * @param {*} outputDir - output directory passed in by the user
+ * @param {*} conditions - list of features and versions to match the code against
+ * @param {*} baseInput - the top level folder that all files are gathered from. Used to clean up file names on creation
+ * @param {*} exactVer - boolean value where if true, versions must match exactly to what was passed in and if false, can match against the next lowest version
+ * @param {*} promises - array of promises that is passed through the recursive function to gather all promises created
+ */
 function process(fileToProcess, outputDir, conditions, baseInput, exactVer, promises) {
     var stat = fs.statSync(fileToProcess);
     if (stat.isDirectory()) {
@@ -66,7 +89,7 @@ function process(fileToProcess, outputDir, conditions, baseInput, exactVer, prom
         var unversioned = fs.readFileSync(fileToProcess, 'utf8');
         versionedFile = applyReplacements(unversioned, path.extname(fileToProcess), conditions, exactVer);
         if (versionedFile === null || versionedFile === undefined) {
-            return console.error('Ran into trouble creating the versioned file');
+            throw 'Error with creating versioned file.\nPlease look at file: ' + fileToProcess + ' for any incorrect formating';
         }
         var fileName;
         //Removes the initial src directory from the new files
@@ -76,6 +99,13 @@ function process(fileToProcess, outputDir, conditions, baseInput, exactVer, prom
     }
 }
 
+/**
+ * applyReplacements takes in the contents of a file and returns those contents with all versions of the features passed in stripped out from the file.
+ * @param {*} buffer - Contents of the file being version controlled
+ * @param {*} fileExt - File type to determine commenting style
+ * @param {*} conditions - Features and versions to keep in the code
+ * @param {*} exactVer - Whether the versions need to match exactly to the conditions or can find the next lower version
+ */
 function applyReplacements(buffer, fileExt, conditions, exactVer) {
     //Currently only checks for css, html, or js files. All other files will just return out of this function
     //with the same buffer that was passed in
@@ -116,27 +146,31 @@ function applyReplacements(buffer, fileExt, conditions, exactVer) {
                 //Pushing the matched string so we can remove it later if needed.
                 matchedStrings.push(matched[0]);
             }
-            var indexes = [];
+            var ver = val,
+                indexes = [];
             //If the exact version cannot be found, find the indexes of the previous version.
             //Will only fire if exact version matching has not been set to true.
             if (versions.indexOf(val) === -1 && !exactVer) {
-                indexes = findNextVersion(versions, val);
+                ver = findNextVersion(versions, val);
             }
-            //Finds the indexes of the passed in version
-            else {
+            //If the the version passed in has no lower version in the code, then leave indexes blank.
+            //This will make sure that all code of this feature is removed.
+            if (ver !== '-1.0.0') {
+                //Finds all indexes that the version matches
                 indexes = versions.map(function(version, indx) {
-                    if (version === val) {
+                    if (version === ver) {
                         return indx;
                     } else {
                         return -1;
                     }
                 })
+
+                //Removes all bad index values and leaves only the correct indexes that match to the code
+                //that should be kept
+                indexes = indexes.filter(function(val) {
+                    return val !== -1;
+                });
             }
-            //Removes all bad index values and leaves only the correct indexes that match to the code
-            //that should be kept
-            indexes = indexes.filter(function(val) {
-                return val !== -1;
-            });
             //Removes the elements of matched strings that are to be kept in the code.
             matchedStrings = matchedStrings.filter(function(val, indx) {
                 return indexes.indexOf(indx) === -1;
@@ -152,8 +186,13 @@ function applyReplacements(buffer, fileExt, conditions, exactVer) {
     return buff;
 }
 
+/**
+ * findNextVersion returns the next version that shows in the code that is lower than the passed in version.
+ * If there is no such lower version, then it returns -1.0.0
+ * @param {*} versions - Array of semantic versions that are in the code
+ * @param {*} baseVersion - The version that was passed into the vt call
+ */
 function findNextVersion(versions, baseVersion) {
-    //Will contain the version previous to the base version
     var highestVer = '-1.0.0';
     var indexes = [];
 
@@ -163,25 +202,19 @@ function findNextVersion(versions, baseVersion) {
             highestVer = versions[i];
         }
     }
-    //Finds all indexes that the newly found version matches
-    if (highestVer !== '-1.0.0') {
-        indexes = versions.map(function(version, indx) {
-            if (version === highestVer) {
-                return indx;
-            } else {
-                return -1;
-            }
-        })
-    }
-    return indexes;
+    return highestVer;
 }
 
+/**
+ * escapeForRegExp takes in a string and returns a string that has been cleaned for regular expression creation use
+ * @param {*} str - string to escape regex for
+ */
 function escapeForRegExp(str) {
     return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
 /**
- * Returns the regular expression that will match against the given key parameter.
+ * getVersionTagsRegExp returns the regular expression that will match against the given key parameter.
  * This can be used to extract out code that has been tagged with a feature and release version.
  * @param {*} commentStart - Comment starting style
  * @param {*} commentEnd - Comment ending style
@@ -192,4 +225,22 @@ function getVersionTagsRegExp(commentStart, commentEnd, key) {
         ' v\\(((?:\\d+\\.)(?:\\d+\\.)\\d+)\\)\\s*' + escapeForRegExp(commentEnd) + '\\s*' + '(\\n|\\r|.)*?' +
         escapeForRegExp(commentStart) + '\\s*' + escapeForRegExp('end ' + key) +
         ' v\\(((?:\\d+\\.)(?:\\d+\\.)\\d+)\\)\\s*' + escapeForRegExp(commentEnd) + '\\s*', 'gi');
+}
+
+/**
+ * matchingFeatures will take in the conditions passed into vt and determines if any features have been
+ * listed multiple times. Will return true if multiples of the same feature exist, otherwise returns false
+ * @param {*} conditions - array of features and versions passed into vt
+ */
+function matchingFeatures(conditions) {
+    var keys = [];
+    for (var i = 0; i < conditions.length; i++) {
+        var key = conditions[i].key;
+        if (keys.indexOf(key) === -1) {
+            keys.push(key);
+        } else {
+            return true;
+        }
+    }
+    return false;
 }
