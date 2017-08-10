@@ -17,7 +17,7 @@ Usage
 -----
 
 VT takes in 4 parameters:
-1. conditions - an array of objects of the format `{featureName: 'semantic version'}` **REQUIRED**
+1. conditions - an array of json objects of the format `{featureName: 'x.x.x'}` where featureName is the name of the feature toggled and 'x.x.x' is the semantic version you **want** to remain in the code. If you do not pass a feature in to this array, then that feature will not be version toggled. **REQUIRED**
 2. exact - a boolean value marking that the user would like to exactly match against the versions passed in or not **optional - defaults to false**
 3. inputDir - a string of the location to begin reading the files from **optional - defaults to src/**
 4. outputDir - a string of the folder to place all of the newly stripped files **optional - defaults to ver/**
@@ -30,144 +30,144 @@ Examples of these comments and what the end result of having VT called on them i
 
 commenting style required: start comment - `<!--featureName v(semantic version)-->` and end comment - `<!--end featureName v(semantic version)-->`
 
-exact matching with `vt({conditions:[{test:'1.2.3'}], exact:true})`:
+exact matching with `vt({conditions:[{featureName:'1.2.3'}], exact:true})`:
 ```html
-<!--test v(1.2.3)-->
-<div>Part of test version 1.2.3</div>
-<!--end test v(1.2.3)-->
+<!--featureName v(1.2.3)-->
+<div>Part of featureName version 1.2.3</div>
+<!--end featureName v(1.2.3)-->
 
-<!--test v(2.2.3)-->
-<div>Part of test version 2.2.3</div>
-<!--end test v(2.2.3)-->
+<!--featureName v(2.2.3)-->
+<div>Part of featureName version 2.2.3</div>
+<!--end featureName v(2.2.3)-->
 ```
 
 will result in
 ```html
-<!--test v(1.2.3)-->
-<div>Part of test version 1.2.3</div>
-<!--end test v(1.2.3)-->
+<!--featureName v(1.2.3)-->
+<div>Part of featureName version 1.2.3</div>
+<!--end featureName v(1.2.3)-->
 ```
 
-loose matching with `vt({conditions:[{test:'1.5.0'}]})`:
+loose matching with `vt({conditions:[{featureName:'1.5.0'}]})`:
 ```html
-<!--test v(1.2.3)-->
-<div>Part of test version 1.2.3</div>
-<!--end test v(1.2.3)-->
+<!--featureName v(1.2.3)-->
+<div>Part of featureName version 1.2.3</div>
+<!--end featureName v(1.2.3)-->
 
-<!--test v(2.2.3)-->
-<div>Part of test version 2.2.3</div>
-<!--end test v(2.2.3)-->
+<!--featureName v(2.2.3)-->
+<div>Part of featureName version 2.2.3</div>
+<!--end featureName v(2.2.3)-->
 ```
 
 will result in
 ```html
-<!--test v(1.2.3)-->
-<div>Part of test version 1.2.3</div>
-<!--end test v(1.2.3)-->
+<!--featureName v(1.2.3)-->
+<div>Part of featureName version 1.2.3</div>
+<!--end featureName v(1.2.3)-->
 ```
 
 ### CSS
 
 commenting style required: start comment - `/*featureName v(semantic version)*/` and end comment - `/*end featureName v(semantic version)*/`
 
-exact matching with `vt({conditions:[{test:'1.2.3'}], exact:true})`:
+exact matching with `vt({conditions:[{featureName:'1.2.3'}], exact:true})`:
 ```css
-/*test v(1.2.3)*/
+/*featureName v(1.2.3)*/
 .background{
     color:red,
 }
-/*end test v(1.2.3)*/
+/*end featureName v(1.2.3)*/
 
-/*test v(2.2.3)*/
+/*featureName v(2.2.3)*/
 .background{
     color:blue,
 }
-/*end test v(2.2.3)*/
+/*end featureName v(2.2.3)*/
 ```
 
 will result in
 ```css
-/*test v(1.2.3)*/
+/*featureName v(1.2.3)*/
 .background{
     color:red,
 }
-/*end test v(1.2.3)*/
+/*end featureName v(1.2.3)*/
 ```
 
-loose matching with `vt({conditions:[{test:'1.5.0'}]})`:
+loose matching with `vt({conditions:[{featureName:'1.5.0'}]})`:
 ```css
-/*test v(1.2.3)*/
+/*featureName v(1.2.3)*/
 .background{
     color:red,
 }
-/*end test v(1.2.3)*/
+/*end featureName v(1.2.3)*/
 
-/*test v(2.2.3)*/
+/*featureName v(2.2.3)*/
 .background{
     color:blue,
 }
-/*end test v(2.2.3)*/
+/*end featureName v(2.2.3)*/
 ```
 
 will result in
 ```css
-/*test v(1.2.3)*/
+/*featureName v(1.2.3)*/
 .background{
     color:red,
 }
-/*end test v(1.2.3)*/
+/*end featureName v(1.2.3)*/
 ```
 
 ### JS
 
 commenting style required: start comment - `//featureName v(semantic version)` and end comment - `//end featureName v(semantic version)`
 
-exact matching with `vt({conditions:[{test:'1.2.3'}], exact:true})`:
+exact matching with `vt({conditions:[{featureName:'1.2.3'}], exact:true})`:
 ```js
-//test v(1.2.3)
-function test(){
+//featureName v(1.2.3)
+function featureName(){
     return 'version 1.2.3';
 }
-//end test v(1.2.3)
+//end featureName v(1.2.3)
 
-//test v(2.2.3)
-function test(){
+//featureName v(2.2.3)
+function featureName(){
     return 'version 2.2.3';
 }
-//end test v(2.2.3)
+//end featureName v(2.2.3)
 ```
 
 will result in
 ```js
-//test v(1.2.3)
-function test(){
+//featureName v(1.2.3)
+function featureName(){
     return 'version 1.2.3';
 }
-//end test v(1.2.3)
+//end featureName v(1.2.3)
 ```
 
-loose matching with `vt({conditions:[{test:'1.5.0'}]})`:
+loose matching with `vt({conditions:[{featureName:'1.5.0'}]})`:
 ```js
-//test v(1.2.3)
-function test(){
+//featureName v(1.2.3)
+function featureName(){
     return 'version 1.2.3';
 }
-//end test v(1.2.3)
+//end featureName v(1.2.3)
 
-//test v(2.2.3)
-function test(){
+//featureName v(2.2.3)
+function featureName(){
     return 'version 2.2.3';
 }
-//end test v(2.2.3)
+//end featureName v(2.2.3)
 ```
 
 will result in
 ```js
-//test v(1.2.3)
-function test(){
+//featureName v(1.2.3)
+function featureName(){
     return 'version 1.2.3';
 }
-//end test v(1.2.3)
+//end featureName v(1.2.3)
 ```
 
 License
