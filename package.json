@@ -1,6 +1,6 @@
 {
     "name": "@bellese/version-toggle",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Allow users to place annotations in code to include or remove based on version deploying",
     "main": "index.js",
     "scripts": {
