@@ -12,6 +12,7 @@ describe('version-toggle', function() {
         cssFile,
         jsFile,
         spacesFile,
+        wrappedFile,
         options;
 
     function readOutputAsText(name) {
@@ -73,6 +74,7 @@ describe('version-toggle', function() {
                 cssFile = fs.readFileSync('test/fixtures/file-after-loose.css');
                 jsFile = fs.readFileSync('test/fixtures/file-after-loose.js');
                 spacesFile = fs.readFileSync('test/fixtures/spaces-after-loose.js');
+                wrappedFile = fs.readFileSync('test/fixtures/file-after-wrapped.js');
                 done();
             });
         });
@@ -108,6 +110,11 @@ describe('version-toggle', function() {
             var out = readOutputAsText('spaces-before-loose.js');
             assert.strictEqual(out.toString('utf8'), spacesFile.toString('utf8'));
         });
+
+        it('should remove all of the code from inside the comments even if the inner comments where of the correct version', function() {
+            var out = readOutputAsText('file-before-wrapped.js');
+            assert.strictEqual(out.toString('utf8'), wrappedFile.toString('utf8'));
+        })
     });
 
     describe('with only a single file fed in', function() {
@@ -129,6 +136,35 @@ describe('version-toggle', function() {
         it('should find latest version lower than provided and remove all other versions from js file', function() {
             var out = readOutputAsText('file-before-loose.js');
             assert.strictEqual(out.toString('utf8'), jsFile.toString('utf8'));
+        });
+    });
+
+    describe('with improperly formated comments', function() {
+        //Cleans up the output folder after every test to ensure a clean test environment
+        afterEach(function(done) {
+            fs.remove('test/output').then(function() {
+                done();
+            });
+        });
+
+        it('should throw an error if no closing comment is found', function() {
+            options = { conditions: [{ test: '1.3.3' }], exact: false, inputDir: 'test/broken-fixtures/missing-closing.js', outputDir: 'test/output/' };
+            try {
+                vt(options);
+            } catch (err) {
+                assert.deepEqual(err, "No closing comment found for test v(1.2.3)");
+            }
+        });
+
+        it('should not change anything if a start comment is not found', function(done) {
+            options = { conditions: [{ test: '1.3.3' }], exact: false, inputDir: 'test/broken-fixtures/missing-opening.js', outputDir: 'test/output/' };
+            vt(options).then(function() {
+                var out = fs.readFileSync('test/output/missing-opening.js');
+                var input = fs.readFileSync('test/broken-fixtures/missing-opening.js');
+                assert.strictEqual(out.toString('utf8'), input.toString('utf8'));
+                //Need to call done to allow the files to be correctly read before they are deleted by the cleanup
+                done();
+            });
         });
     });
 

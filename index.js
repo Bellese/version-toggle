@@ -136,15 +136,22 @@ function applyReplacements(buffer, fileExt, conditions, exactVer) {
 
             //If the regex hasn't already been created, then create the regex.
             if (!regex) {
-                regex = regexCache[fileExt + key] = getVersionTagsRegExp(commentStart, commentEnd, key);
+                regex = regexCache[fileExt + key] = getStartVersionTagsRegExp(commentStart, commentEnd, key);
             }
             var versions = [],
                 matchedStrings = [];
             while ((matched = regex.exec(contents)) !== null) {
+                var versionRegex = getVersionSpecificTagRegExp(commentStart, commentEnd, key, matched[1]);
                 //Pushing the version of the matched text for comparison.
                 versions.push(matched[1]);
+                //Getting the full block of code now that the version number has been grabbed
+                versionMatched = versionRegex.exec(contents);
+                //If versionMatched is null then there was no closing block found for that feature version so error
+                if (versionMatched === null || versionMatched === undefined) {
+                    throw "No closing comment found for " + key + " v(" + matched[1] + ")";
+                }
                 //Pushing the matched string so we can remove it later if needed.
-                matchedStrings.push(matched[0]);
+                matchedStrings.push(versionMatched[0]);
             }
             var ver = val,
                 indexes = [];
@@ -214,17 +221,30 @@ function escapeForRegExp(str) {
 }
 
 /**
- * getVersionTagsRegExp returns the regular expression that will match against the given key parameter.
- * This can be used to extract out code that has been tagged with a feature and release version.
+ * getStartVersionTagsRegExp returns the regular expression that will match against the given key parameter.
+ * This is used to grab the start comment of a code block and extract the version of that block
  * @param {*} commentStart - Comment starting style
  * @param {*} commentEnd - Comment ending style
  * @param {*} key - The key param value to match against
  */
-function getVersionTagsRegExp(commentStart, commentEnd, key) {
-    return new RegExp('\\s*' + escapeForRegExp(commentStart) + '\\s*' + escapeForRegExp(key) +
-        ' v\\(((?:\\d+\\.)(?:\\d+\\.)\\d+)\\)\\s*' + escapeForRegExp(commentEnd) + '\\s*' + '(\\n|\\r|.)*?' +
+function getStartVersionTagsRegExp(commentStart, commentEnd, key) {
+    return new RegExp(escapeForRegExp(commentStart) + '\\s*' + escapeForRegExp(key) +
+        ' v\\(((?:\\d+\\.)(?:\\d+\\.)\\d+)\\)\\s*' + escapeForRegExp(commentEnd), 'gi');
+}
+
+/**
+ * getVersionSpecificTagRegExp returns the regular expression that will match against the given key parameter.
+ * This is used to grab the entire code block of an exact version for code stripping
+ * @param {*} commentStart - Comment starting style
+ * @param {*} commentEnd - Comment ending style
+ * @param {*} key - The key param value to match against
+ * @param {*} version - The version that this code block is for
+ */
+function getVersionSpecificTagRegExp(commentStart, commentEnd, key, version) {
+    return new RegExp(escapeForRegExp(commentStart) + '\\s*' + escapeForRegExp(key) +
+        ' v\\(' + escapeForRegExp(version) + '\\)\\s*' + escapeForRegExp(commentEnd) + '\\s*' + '(?:\\n|\\r|.)*?' +
         escapeForRegExp(commentStart) + '\\s*' + escapeForRegExp('end ' + key) +
-        ' v\\(((?:\\d+\\.)(?:\\d+\\.)\\d+)\\)\\s*' + escapeForRegExp(commentEnd) + '\\s*', 'gi');
+        ' v\\(' + escapeForRegExp(version) + '\\)\\s*' + escapeForRegExp(commentEnd) + '\\s*', 'gi');
 }
 
 /**
