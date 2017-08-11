@@ -8,7 +8,8 @@
     },
     "keywords": [
         "versioning",
-        "code"
+        "code stripping",
+        "feature toggling"
     ],
     "author": "Josh Offutt",
     "license": "MIT",
