@@ -8,9 +8,8 @@ Version-Toggle (VT) is used for facilitating front-end development with version 
 
 Installation
 ------------
-**This is currently not published yet. Will be published soon though. Until then, you cannot use the following command to install**
 ```sh
-npm install version-toggle
+npm install @bellese/version-toggle
 ```
 
 Usage
