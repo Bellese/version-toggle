@@ -1,7 +1,11 @@
 {
     "name": "@bellese/version-toggle",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Allow users to place annotations in code to include or remove based on version deploying",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Bellese/version-toggle.git"
+    },
     "main": "index.js",
     "scripts": {
         "test": "mocha"
