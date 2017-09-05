@@ -1,19 +1,53 @@
+#!/usr/bin/env node
+
 const fs = require('fs-extra');
 const path = require('path');
 const cmpSem = require('semver-compare');
+const program = require('commander');
 
 /**
- * vt takes in the users parameters and begins the call to process to get all of the files version toggled.
- * Will return one single promise that contains all promises from calling process to ensure that when vt finishes, all files that were contained within the input directory have finished being copied and version toggled.
+ * collectConditions will gather all of the commandline conditions passed into VT
+ * @param {*} con 
+ * @param {*} conditions 
+ */
+function collectConditions(con, conditions){
+    var split = con.split(":");
+    var string = "{\""+split[0]+"\":\""+split[1]+"\"}";
+    var condition = JSON.parse(string);
+    conditions.push(condition);
+    return conditions;
+}
+
+//Add the parameters to the application
+program
+.version('2.0.0')
+.usage('<options>')
+.option('-i, --inputDir [inputDir]', 'Sets the input directory, defaults to src/','src/')
+.option('-o, --outputDir [outputDir]', 'Sets the output directory, defaults to ver/','ver/')
+.option('-c, --conditions <conditions>', 'Sets the conditions for version toggling. Can be called multiple times to add in multiple conditions. Condition object structure: featureName:sem.ver.sion', collectConditions, [])
+.option('-e, --exact [exact]', 'Set to false to allow loose matching, defaults to true (exact matching)', true)
+.parse(process.argv);
+
+//Gathers the parameters to pass into the vt call
+var options = {
+    inputDir: program.inputDir,
+    outputDir: program.outputDir,
+    exact: program.exact,
+    conditions: program.conditions
+}
+
+vt(options);
+
+/**
+ * vt takes in the users parameters and begins the call to processFiles to get all of the files version toggled.
+ * Will return one single promise that contains all promises from calling processFiles to ensure that when vt finishes, all files that were contained within the input directory have finished being copied and version toggled.
  * @param {*} options - parameters that users passed to the vt call.
  */
-exports = module.exports = function vt(options) {
-    if (options === null || options === undefined) {
-        throw 'Missing options from call. \nUsage: vtvt({conditions:[{featureName:\'sem.ve.r\'}]})';
-    }
+function vt(options) {
+    console.log(options);
     var conditions = (options.conditions ? options.conditions : []);
     if (conditions.length === 0) {
-        throw 'Missing conditions from vt() call. \nUsage: vt({conditions:[{featureName:\'sem.ve.r\'}]})';
+        throw 'Missing conditions from vt() call. \nUsage: vt -c featureName:sem.ve.r -c otherFeatureName:sem.ve.r';
     }
     if (matchingFeatures(conditions)) {
         throw 'You can not pass in the same feature multiple times.';
@@ -51,11 +85,11 @@ exports = module.exports = function vt(options) {
     var promises = [];
     //If split is empty, then the inputDir is actually a directory so no need to pass in a modified path
     if (split.length === 0) {
-        process(inputDir, outputDir, parsedConditions, inputDir, exactVer, promises);
+        processFiles(inputDir, outputDir, parsedConditions, inputDir, exactVer, promises);
     }
     //If split is not empty, then the inputDir is actually a file so pass in the modified path object
     else {
-        process(inputDir, outputDir, parsedConditions, path, exactVer, promises);
+        processFiles(inputDir, outputDir, parsedConditions, path, exactVer, promises);
     }
     //Returns a promise that only resolves when all of the files have finished being processed to ensure
     //that systems can reliably know that the version toggling is finished before doing anything else.
@@ -63,7 +97,7 @@ exports = module.exports = function vt(options) {
 }
 
 /**
- * process recursively goes through the input directory for all folders and calls applyReplacements for all files found.
+ * processFiles recursively goes through the input directory for all folders and calls applyReplacements for all files found.
  * This returns an array of promises of all files being created/copied so that calls to vt can reliably know when all files have been finished.
  * @param {*} fileToProcess - file or folder to process
  * @param {*} outputDir - output directory passed in by the user
@@ -72,7 +106,7 @@ exports = module.exports = function vt(options) {
  * @param {*} exactVer - boolean value where if true, versions must match exactly to what was passed in and if false, can match against the next lowest version
  * @param {*} promises - array of promises that is passed through the recursive function to gather all promises created
  */
-function process(fileToProcess, outputDir, conditions, baseInput, exactVer, promises) {
+function processFiles(fileToProcess, outputDir, conditions, baseInput, exactVer, promises) {
     var stat = fs.statSync(fileToProcess);
     if (stat.isDirectory()) {
         //reads the directory to get all children files
@@ -82,7 +116,7 @@ function process(fileToProcess, outputDir, conditions, baseInput, exactVer, prom
             //Gets the path to the file and calls process with that full path.
             //This ensures that recursive calls have the full path to the file and not just the last folder
             var fromPath = path.join(fileToProcess, file);
-            return process(fromPath, outputDir, conditions, baseInput, exactVer, promises);
+            return processFiles(fromPath, outputDir, conditions, baseInput, exactVer, promises);
         });
     } else {
         var versionedFile;
@@ -255,7 +289,8 @@ function getVersionSpecificTagRegExp(commentStart, commentEnd, key, version) {
 function matchingFeatures(conditions) {
     var keys = [];
     for (var i = 0; i < conditions.length; i++) {
-        var key = conditions[i].key;
+        var objKeys = Object.keys(conditions[i]);
+        var key = objKeys[0];
         if (keys.indexOf(key) === -1) {
             keys.push(key);
         } else {
