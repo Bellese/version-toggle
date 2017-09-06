@@ -1,6 +1,6 @@
 'use strict';
 
-var vt = require('../');
+var versionToggle = require('../src/version-toggle');
 var fs = require('fs-extra');
 var assert = require('assert');
 
@@ -22,7 +22,7 @@ describe('version-toggle', function() {
     describe('with exact version matching', function(done) {
         beforeEach(function(done) {
             options = { conditions: [{ test: '1.3.3' }], exact: true, inputDir: 'test/fixtures', outputDir: 'test/output' };
-            vt(options).then(function() {
+            versionToggle(options).then(function() {
                 mdFile = fs.readFileSync('test/fixtures/file-after-exact.md');
                 htmlFile = fs.readFileSync('test/fixtures/file-after-exact.html');
                 cssFile = fs.readFileSync('test/fixtures/file-after-exact.css');
@@ -68,7 +68,7 @@ describe('version-toggle', function() {
     describe('with loose version matching', function() {
         beforeEach(function(done) {
             options = { conditions: [{ test: '1.3.3' }], exact: false, inputDir: 'test/fixtures', outputDir: 'test/output' };
-            vt(options).then(function() {
+            versionToggle(options).then(function() {
                 mdFile = fs.readFileSync('test/fixtures/file-after-loose.md');
                 htmlFile = fs.readFileSync('test/fixtures/file-after-loose.html');
                 cssFile = fs.readFileSync('test/fixtures/file-after-loose.css');
@@ -120,7 +120,7 @@ describe('version-toggle', function() {
     describe('with only a single file fed in', function() {
         beforeEach(function(done) {
             options = { conditions: [{ test: '1.3.3' }], exact: false, inputDir: 'test/fixtures/file-before-loose.js', outputDir: 'test/output/' };
-            vt(options).then(function() {
+            versionToggle(options).then(function() {
                 jsFile = fs.readFileSync('test/fixtures/file-after-loose.js');
                 done();
             });
@@ -150,7 +150,7 @@ describe('version-toggle', function() {
         it('should throw an error if no closing comment is found', function() {
             options = { conditions: [{ test: '1.3.3' }], exact: false, inputDir: 'test/broken-fixtures/missing-closing.js', outputDir: 'test/output/' };
             try {
-                vt(options);
+                versionToggle(options);
             } catch (err) {
                 assert.deepEqual(err, "No closing comment found for test v(1.2.3)");
             }
@@ -158,7 +158,7 @@ describe('version-toggle', function() {
 
         it('should not change anything if a start comment is not found', function(done) {
             options = { conditions: [{ test: '1.3.3' }], exact: false, inputDir: 'test/broken-fixtures/missing-opening.js', outputDir: 'test/output/' };
-            vt(options).then(function() {
+            versionToggle(options).then(function() {
                 var out = fs.readFileSync('test/output/missing-opening.js');
                 var input = fs.readFileSync('test/broken-fixtures/missing-opening.js');
                 assert.strictEqual(out.toString('utf8'), input.toString('utf8'));
@@ -173,32 +173,32 @@ describe('version-toggle', function() {
         it('should not allow multiples of the same feature in conditions', function() {
             options = { conditions: [{ test: '1.3.3' }, { test: '1.2.2' }, { test: '1.0.0' }], exact: false, inputDir: 'test/fixtures', outputDir: 'test/output' };
             assert.throws(function() {
-                vt(options);
+                versionToggle(options);
             });
         });
 
         it('should not allow you to pass in no conditions', function() {
             options = { exact: false, inputDir: 'test/fixtures', outputDir: 'test/output' };
             assert.throws(function() {
-                vt(options);
+                versionToggle(options);
             })
         })
 
         it('should not allow you to pass in no options at all', function() {
             assert.throws(function() {
-                vt();
+                versionToggle();
             })
         })
 
         it('should not allow you to pass in null options', function() {
             assert.throws(function() {
-                vt(null);
+                versionToggle(null);
             })
         })
 
         it('should not allow you to pass in undefined options', function() {
             assert.throws(function() {
-                vt(undefined);
+                versionToggle(undefined);
             })
         })
     });
