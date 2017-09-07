@@ -5,8 +5,8 @@ const versionToggle = require('./src/version-toggle')
 
 /**
  * collectConditions will gather all of the commandline conditions passed into VT
- * @param {*} con 
- * @param {*} conditions 
+ * @param {*} con - condition to add to the list of conditions
+ * @param {*} conditions - list of conditions that will be added to
  */
 function collectConditions(con, conditions) {
     var split = con.split(":");
@@ -16,6 +16,10 @@ function collectConditions(con, conditions) {
     return conditions;
 }
 
+/**
+ * list will take in the list of conditions passed in from command line and parse them into json objects that version-toggle can correctly ingest.
+ * @param {*} list - List of conditions to apply to version toggle 
+ */
 function list(list) {
     var conditions = [],
         split = list.split(',');
@@ -43,6 +47,7 @@ var options = {
     inputDir: program.inputDir,
     outputDir: program.outputDir,
     exact: program.exact,
+    //Grabs the conditions passed in both from the list parameter and any single condition parameters
     conditions: program.conditions.concat(program.list)
 }
 
