@@ -9,17 +9,26 @@ Version-Toggle (VT) is used for facilitating front-end development with version 
 Installation
 ------------
 ```sh
-npm install @bellese/version-toggle
+npm install -g @bellese/version-toggle
 ```
 
 Usage
 -----
+Once installed globally you will be able to use the command vt from your command prompt. See below for the different options you can set for the vt call.
 
-VT takes in 4 parameters:
-1. conditions - an array of json objects of the format `{featureName: 'x.x.x'}` where featureName is the name of the feature toggled and 'x.x.x' is the semantic version you **want** to remain in the code. If you do not pass a feature in to this array, then that feature will not be version toggled. **REQUIRED**
-2. exact - a boolean value marking that the user would like to exactly match against the versions passed in or not **optional - defaults to false**
-3. inputDir - a string of the location to begin reading the files from **optional - defaults to src/**
-4. outputDir - a string of the folder to place all of the newly stripped files **optional - defaults to ver/**
+VT has 5 different options that can be set:
+1. `-c, --conditions` = a repeatable flag where you pass in a single condition of the format `-c featureName:x.x.x` or `--conditions featureName:x.x.x` where featureName is the name of the feature toggled and x.x.x is the semantic version you **want** to remain in the code. **optional**
+2. `-l, --list` = an array of conditions that are comma seperated. The format to pass in a list is `-l featureName:x.x.x,anotherFeature:x.x.x` or `--list featureName:x.x.x` where featureName and anotherFeature are the names of the features being toggled and x.x.x is the semantic version of those features you **want** to remain in the code. **optional**
+
+**IMPORTANT**
+In order for vt to work, you must pass in at least one condition, whether trough -c or -l. If you do not provide any conditions, vt will return back with an error. Also, you can use -c and -l both at the same time, any conditions passed in through either of these options will be compiled together and passed into vt. For example: `vt -c hey:1.1.1 -l test:1.3.3,you:1.2.3` is valid and will pass all three conditions to vt. Lastly, the -c option can be used multiple times in a call. For example: `vt -c test:1.3.3 -c testing:1.3.3 -c hey:1.1.1` is a valid call and will pass in all three conditions to vt.
+
+3. `-e, --exact` = a boolean value marking that the user would like to exactly match against the versions passed in or not. Format is `-e false` or `--exact true`. **optional - defaults to true**
+4. `-i, --inputDir` = a string of the location to begin reading the files from. Format is `-i src/` or `--inputDir code/`. **optional - defaults to src/**
+5. `-o, --outputDir` = a string of the folder to place all of the newly stripped files. Format is `-o out/` or `--outputDir versioned/` **optional - defaults to ver/**
+
+**For help**
+Use the command `vt -h`. This will print out a list of all options for vt and a description of what they do and how they are formatted.
 
 VT relies upon specific comments placed within the code to know what code to remove and what code to leave behind.
 Examples of these comments and what the end result of having VT called on them is shown below.
@@ -29,7 +38,7 @@ Examples of these comments and what the end result of having VT called on them i
 
 commenting style required: start comment - `<!--featureName v(semantic version)-->` and end comment - `<!--end featureName v(semantic version)-->`
 
-exact matching with `vt({conditions:[{featureName:'1.2.3'}], exact:true})`:
+exact matching with command `vt -c featureName:1.2.3`:
 ```html
 <!--featureName v(1.2.3)-->
 <div>Part of featureName version 1.2.3</div>
@@ -47,7 +56,7 @@ will result in
 <!--end featureName v(1.2.3)-->
 ```
 
-loose matching with `vt({conditions:[{featureName:'1.5.0'}]})`:
+loose matching with command `vt -c featureName:1.5.0 -e false`:
 ```html
 <!--featureName v(1.2.3)-->
 <div>Part of featureName version 1.2.3</div>
@@ -69,7 +78,7 @@ will result in
 
 commenting style required: start comment - `/*featureName v(semantic version)*/` and end comment - `/*end featureName v(semantic version)*/`
 
-exact matching with `vt({conditions:[{featureName:'1.2.3'}], exact:true})`:
+exact matching with command `vt -c featureName:1.2.3`:
 ```css
 /*featureName v(1.2.3)*/
 .background{
@@ -93,7 +102,7 @@ will result in
 /*end featureName v(1.2.3)*/
 ```
 
-loose matching with `vt({conditions:[{featureName:'1.5.0'}]})`:
+loose matching with command `vt -c featureName:1.5.0 -e false`:
 ```css
 /*featureName v(1.2.3)*/
 .background{
@@ -121,7 +130,7 @@ will result in
 
 commenting style required: start comment - `//featureName v(semantic version)` and end comment - `//end featureName v(semantic version)`
 
-exact matching with `vt({conditions:[{featureName:'1.2.3'}], exact:true})`:
+exact matching with command `vt -c featureName:1.2.3`:
 ```js
 //featureName v(1.2.3)
 function featureName(){
@@ -145,7 +154,7 @@ function featureName(){
 //end featureName v(1.2.3)
 ```
 
-loose matching with `vt({conditions:[{featureName:'1.5.0'}]})`:
+loose matching with command `vt -c featureName:1.5.0 -e false`:
 ```js
 //featureName v(1.2.3)
 function featureName(){

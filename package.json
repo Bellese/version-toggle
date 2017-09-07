@@ -1,32 +1,32 @@
 {
-  "name": "@bellese/version-toggle",
-  "version": "1.0.2",
-  "description": "Allow users to place annotations in code to include or remove based on version deploying",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Bellese/version-toggle.git"
-  },
-  "main": "vt.js",
-  "bin": {
-    "vt": "./vt.js"
-  },
-  "scripts": {
-    "test": "mocha"
-  },
-  "keywords": [
-    "versioning",
-    "code stripping",
-    "feature toggling"
-  ],
-  "author": "Josh Offutt",
-  "license": "MIT",
-  "dependencies": {
-    "commander": "^2.11.0",
-    "fs-extra": "^4.0.0",
-    "path": "^0.12.7",
-    "semver-compare": "^1.0.0"
-  },
-  "devDependencies": {
-    "mocha": "^2.5.3"
-  }
+    "name": "@bellese/version-toggle",
+    "version": "2.0.0",
+    "description": "Allow users to place annotations in code to include or remove based on version deploying",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Bellese/version-toggle.git"
+    },
+    "main": "vt.js",
+    "bin": {
+        "vt": "./vt.js"
+    },
+    "scripts": {
+        "test": "mocha"
+    },
+    "keywords": [
+        "versioning",
+        "code stripping",
+        "feature toggling"
+    ],
+    "author": "Josh Offutt",
+    "license": "MIT",
+    "dependencies": {
+        "commander": "^2.11.0",
+        "fs-extra": "^4.0.0",
+        "path": "^0.12.7",
+        "semver-compare": "^1.0.0"
+    },
+    "devDependencies": {
+        "mocha": "^2.5.3"
+    }
 }
