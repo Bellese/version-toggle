@@ -168,7 +168,7 @@ describe('version-toggle', function() {
         });
     });
 
-    describe('with improper command line parameters', function() {
+    describe('with improper parameters', function() {
 
         it('should not allow multiples of the same feature in conditions', function() {
             options = { conditions: [{ test: '1.3.3' }, { test: '1.2.2' }, { test: '1.0.0' }], exact: false, inputDir: 'test/fixtures', outputDir: 'test/output' };
