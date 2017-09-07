@@ -21,7 +21,11 @@ exports = module.exports = function versionToggle(options) {
     if (inputDir === outputDir) {
         throw 'Input Directory can not be the same as the Output Directory.\nPlease note that the default inputDir is src/ and the default outputDir is ver/';
     }
-    var exactVer = (options.exact ? options.exact : false);
+    //Ensuring that exact matching is the default value if nothing is passed in from options
+    var exactVer = true;
+    if ((options.exact !== undefined && options.exact !== null)) {
+        exactVer = options.exact;
+    }
     var parsedConditions = [];
 
     //Gathers the features and versions into an easily iterable state for use
