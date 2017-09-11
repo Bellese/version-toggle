@@ -37,13 +37,13 @@ exports = module.exports = function versionToggle(options) {
 
     var stat = fs.statSync(inputDir);
     var split = [];
-    var path = '';
+    var pathString = '';
     if (!stat.isDirectory()) {
         //Strip out the path before the file name
-        split = inputDir.split('/');
+        split = inputDir.split(path.sep);
         split.forEach(function(val, indx) {
             if (indx !== split.length - 1) {
-                path += val + '/';
+                pathString += val + path.sep;
             }
         });
     }
@@ -56,7 +56,7 @@ exports = module.exports = function versionToggle(options) {
     }
     //If split is not empty, then the inputDir is actually a file so pass in the modified path object
     else {
-        processFiles(inputDir, outputDir, parsedConditions, path, exactVer, promises);
+        processFiles(inputDir, outputDir, parsedConditions, pathString, exactVer, promises);
     }
     //Returns a promise that only resolves when all of the files have finished being processed to ensure
     //that systems can reliably know that the version toggling is finished before doing anything else.
