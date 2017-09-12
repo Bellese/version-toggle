@@ -33,7 +33,7 @@ function list(list) {
 
 //Add the parameters to the application
 program
-    .version('2.0.0')
+    .version('2.0.1')
     .usage('<options>')
     .option('-i, --inputDir [inputDir]', 'Sets the input directory, defaults to src/', 'src/')
     .option('-o, --outputDir [outputDir]', 'Sets the output directory, defaults to ver/', 'ver/')
