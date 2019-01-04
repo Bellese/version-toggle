@@ -27,6 +27,6 @@
         "semver-compare": "^1.0.0"
     },
     "devDependencies": {
-        "mocha": "^2.5.3"
+        "mocha": "^5.2.0"
     }
 }
