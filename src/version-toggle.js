@@ -190,7 +190,7 @@ function applyReplacements(buffer, fileExt, conditions, exactVer) {
         }
     }
 
-    var buff = new Buffer(contents);
+    var buff = Buffer.from(contents);
     return buff;
 }
 
